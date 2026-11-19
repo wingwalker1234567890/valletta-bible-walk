@@ -1,0 +1,1 @@
+var e=new URL(`mizzi-pj3StYlE.glb`,import.meta.url).href;export{e as default};

@@ -1,0 +1,1 @@
+var e=new URL(`flak-CUrWaTS-.glb`,import.meta.url).href;export{e as default};

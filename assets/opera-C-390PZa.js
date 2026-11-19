@@ -1,0 +1,1 @@
+var e=new URL(`opera-D8EqSN49.glb`,import.meta.url).href;export{e as default};

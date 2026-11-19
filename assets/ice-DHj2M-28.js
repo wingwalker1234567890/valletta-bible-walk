@@ -1,0 +1,1 @@
+var e=new URL(`ice--SW0RqlA.glb`,import.meta.url).href;export{e as default};

@@ -1,0 +1,1 @@
+var e=new URL(`ural-D9_320AW.glb`,import.meta.url).href;export{e as default};

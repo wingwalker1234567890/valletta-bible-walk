@@ -1,0 +1,1 @@
+var e=new URL(`cafeset-CJ44gBL5.glb`,import.meta.url).href;export{e as default};

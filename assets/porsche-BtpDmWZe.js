@@ -1,0 +1,1 @@
+var e=new URL(`porsche-BZ8YOBFk.glb`,import.meta.url).href;export{e as default};

@@ -1,0 +1,1 @@
+var e=new URL(`parachute-C6fREkue.glb`,import.meta.url).href;export{e as default};

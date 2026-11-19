@@ -1,0 +1,1 @@
+var e=new URL(`pistol-CwWZnL4M.glb`,import.meta.url).href;export{e as default};

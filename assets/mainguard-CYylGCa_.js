@@ -1,0 +1,1 @@
+var e=new URL(`mainguard-Dgp41SwP.glb`,import.meta.url).href;export{e as default};

@@ -1,0 +1,1 @@
+var e=new URL(`helga-DrR71IPa.glb`,import.meta.url).href;export{e as default};

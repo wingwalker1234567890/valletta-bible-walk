@@ -1,0 +1,1 @@
+var e=new URL(`triton-8wiPi2ZF.glb`,import.meta.url).href;export{e as default};
