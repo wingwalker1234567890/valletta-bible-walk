@@ -1,0 +1,1 @@
+var e=new URL(`tree-BHOlymgy.glb`,import.meta.url).href;export{e as default};

@@ -1,0 +1,1 @@
+var e=new URL(`stjohn-DAmIVnrE.glb`,import.meta.url).href;export{e as default};
