@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>瓦莱塔·圣经之旅 · 统计后台</title>
+<style>
+  :root { --bg: #f6f1e7; --card: #fff; --ink: #2b2118; --mut: #7a6a58; --line: #e3d8c3; --acc: #1f5a86; --acc2: #b8862f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
+  header { padding: 18px 24px; background: #2b2118; color: #f6f1e7; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  header h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 1px; }
+  header .who { margin-left: auto; font-size: 13px; opacity: .8; }
+  header button { font: inherit; font-size: 13px; padding: 4px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,.4); background: transparent; color: #fff; cursor: pointer; }
+  main { max-width: 1180px; margin: 0 auto; padding: 20px; }
+  .bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+  .bar select, .bar button, .bar input[type=date] { font: inherit; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--line); background: #fff; }
+  .bar button.primary { background: var(--acc); color: #fff; border-color: var(--acc); cursor: pointer; }
+  .bar label { font-size: 14px; color: var(--mut); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .kpi .v { font-size: 28px; font-weight: 700; color: var(--acc); line-height: 1.1; }
+  .kpi .l { font-size: 13px; color: var(--mut); margin-top: 4px; }
+  .kpi .s { font-size: 12px; color: var(--mut); margin-top: 2px; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; }
+  section h2 { margin: 0 0 10px; font-size: 16px; }
+  .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  th { color: var(--mut); font-weight: 600; font-size: 13px; }
+  td.n { text-align: right; font-variant-numeric: tabular-nums; }
+  .hbar { height: 10px; background: var(--acc); border-radius: 3px; min-width: 2px; }
+  .note { font-size: 13px; color: var(--mut); }
+  .login { max-width: 420px; margin: 60px auto; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 26px; }
+  .login input { width: 100%; font: inherit; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; margin: 10px 0; }
+  .login button { width: 100%; font: inherit; padding: 10px; border: 0; border-radius: 8px; background: var(--acc); color: #fff; cursor: pointer; }
+  .msg { margin-top: 12px; font-size: 14px; }
+  .err { color: #a3321f; }
+  .hidden { display: none !important; }
+  svg text { font: 11px system-ui, sans-serif; fill: var(--mut); }
+</style>
+</head>
+<body>
+<header><h1>瓦莱塔 · 圣经之旅 · 统计后台</h1><span class="who" id="who"></span><button id="logout" class="hidden">退出登录</button></header>
+
+<div id="loginBox" class="login hidden">
+  <h2 style="margin-top:0">登录</h2>
+  <p class="note">输入你在统计设置里登记的邮箱，我们会发一封登录邮件给你，点邮件里的链接就能进来，不需要密码。</p>
+  <input id="email" type="email" placeholder="你的邮箱" autocomplete="email">
+  <button id="sendLink">发送登录链接</button>
+  <div class="msg" id="loginMsg"></div>
+</div>
+
+<main id="app" class="hidden">
+  <div class="bar">
+    <label>时间范围</label>
+    <select id="range"><option value="1">今天</option><option value="7" selected>最近 7 天</option><option value="30">最近 30 天</option><option value="90">最近 90 天</option><option value="3650">全部</option></select>
+    <label><input type="checkbox" id="withTest"> 包括我自己的测试设备</label>
+    <button class="primary" id="reload">刷新</button>
+    <span style="flex:1"></span>
+    <button id="csvSummary">导出汇总 CSV</button>
+    <button id="csvRaw">导出原始记录 CSV</button>
+  </div>
+  <div class="note" id="status" style="margin-bottom:12px"></div>
+  <div class="grid" id="kpis"></div>
+  <section><h2>每天的访问</h2><div id="daily"></div></section>
+  <div class="two">
+    <section><h2>完成情况（开始旅程的人中）</h2><div id="funnel"></div></section>
+    <section><h2>游玩时长</h2><div id="durations"></div></section>
+  </div>
+  <section><h2>各地标：到访与卡片</h2><div id="sights"></div><p class="note">到访：走到地标附近的访问次数。打开：打开卡片的次数。阅读时长：卡片从打开到关闭的时间（中位数），太短（不到 3 秒）多半是直接跳过。</p></section>
+  <div class="two">
+    <section><h2>设备与加载</h2><div id="devices"></div></section>
+    <section><h2>来源、语言与浏览器</h2><div id="sources"></div></section>
+  </div>
+  <p class="note">说明：所有数据都是匿名的，没有姓名、邮箱、信仰、位置或 IP。“独立访客”和“回访”只能统计同意了匿名统计的人；没有同意的访问按“每次访问”计入，不能去重，所以独立访客是估算值。</p>
+</main>
+
+<script>
+(() => {
+  const SB = 'https://ehykdhzwqzoajcgalviz.supabase.co', KEY = 'sb_publishable_nv64PUIE9nx4B4CmICGXwg_PfH5wEW2';
+  const NAMES = { triton: '特里同喷泉', citygate: '瓦莱塔城门', parliament: '国会大厦', opera: '皇家歌剧院遗址', museum: '国家考古博物馆', stjohn: '圣约翰副主教座堂', caravaggio: '卡拉瓦乔名画', siege: '大围攻纪念碑', library: '国家图书馆', palace: '大团长宫', mainguard: '主卫队楼' };
+  const ORDER = Object.keys(NAMES);
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  // ---------------------------------------------------------------- login (Supabase magic link, no password)
+  let token = sessionStorage.getItem('bw_tok') || '';
+  if (location.hash.includes('access_token=')) {
+    const h = new URLSearchParams(location.hash.slice(1)); token = h.get('access_token') || '';
+    sessionStorage.setItem('bw_tok', token); history.replaceState(null, '', location.pathname);
+  } else if (location.hash.includes('error_description=')) {
+    const h = new URLSearchParams(location.hash.slice(1)); setTimeout(() => { $('loginMsg').innerHTML = `<span class="err">登录链接无效或已过期：${esc(h.get('error_description'))}。请重新发送。</span>`; }, 0);
+    history.replaceState(null, '', location.pathname);
+  }
+  const showLogin = () => { $('loginBox').classList.remove('hidden'); $('app').classList.add('hidden'); $('logout').classList.add('hidden'); $('who').textContent = ''; };
+  $('sendLink').onclick = async () => {
+    const email = $('email').value.trim(); if (!/^\S+@\S+\.\S+$/.test(email)) { $('loginMsg').innerHTML = '<span class="err">请输入正确的邮箱。</span>'; return; }
+    $('loginMsg').textContent = '正在发送…';
+    try {
+      const r = await fetch(`${SB}/auth/v1/otp?redirect_to=${encodeURIComponent(location.origin + location.pathname)}`, { method: 'POST', headers: { apikey: KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ email, create_user: true }) });
+      $('loginMsg').innerHTML = r.ok ? '登录邮件已发送，请到邮箱点开链接（可能在垃圾邮件里）。链接要在这台设备、这个浏览器里打开。' : `<span class="err">发送失败（${r.status}）。${r.status === 429 ? '发送太频繁，请过一分钟再试。' : ''}</span>`;
+    } catch { $('loginMsg').innerHTML = '<span class="err">网络错误，请稍后再试。</span>'; }
+  };
+  $('logout').onclick = () => { sessionStorage.removeItem('bw_tok'); token = ''; showLogin(); };
+  const rpc = async (fn, body) => {
+    const r = await fetch(`${SB}/rest/v1/rpc/${fn}`, { method: 'POST', headers: { apikey: KEY, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
+    if (r.status === 401 || r.status === 403) { const t = await r.text(); throw new Error('auth:' + t); }
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  };
+
+  // ---------------------------------------------------------------- data
+  let rows = [];
+  async function load() {
+    const days = +$('range').value, until = new Date(Date.now() + 60000), since = new Date(); since.setHours(0, 0, 0, 0); since.setDate(since.getDate() - (days - 1));
+    $('status').textContent = '正在读取…'; rows = [];
+    let after = 0;
+    for (let page = 0; page < 60; page++) {
+      const r = await rpc('bw_export', { since: since.toISOString(), until: until.toISOString(), after_id: after, with_test: $('withTest').checked });
+      rows.push(...r); if (r.length < 5000) break; after = r[r.length - 1].id;
+    }
+    $('status').textContent = `${since.toLocaleDateString('zh-CN')} 至今，共 ${rows.length} 条记录。读取时间 ${new Date().toLocaleTimeString('zh-CN')}`;
+    render();
+  }
+
+  const median = a => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+  const pct = (a, b) => b ? Math.round(a / b * 1000) / 10 + '%' : '—';
+  const fmtSec = s => s == null ? '—' : s < 60 ? Math.round(s) + ' 秒' : (s / 60).toFixed(1) + ' 分钟';
+  let summary = [];
+  function compute() {
+    const by = ev => rows.filter(r => r.ev === ev);
+    const visits = by('visit'), sessions = new Set(rows.map(r => r.session_id));
+    const consentVisits = visits.filter(r => r.visitor_id), vids = new Set(consentVisits.map(r => r.visitor_id));
+    const otherVisits = visits.length - consentVisits.length;
+    const estUnique = Math.round(vids.size + otherVisits * (consentVisits.length ? vids.size / consentVisits.length : 1));
+    // return visitors: consenting visitors seen on more than one day in the period, or whose visit was flagged as a return
+    const daysBy = {}; for (const r of consentVisits) (daysBy[r.visitor_id] ??= new Set()).add(r.received_at.slice(0, 10));
+    const retFlag = new Set(consentVisits.filter(r => r.props?.ret === true).map(r => r.visitor_id));
+    const returners = [...vids].filter(v => daysBy[v].size > 1 || retFlag.has(v)).length;
+    const ok = by('load_ok'), fail = by('load_fail');
+    const starts = new Set(by('start').map(r => r.session_id));
+    const reach = n => new Set(by('progress').filter(r => r.props?.n >= n).map(r => r.session_id)).size;
+    const endSec = {}; for (const r of by('end')) endSec[r.session_id] = Math.max(endSec[r.session_id] || 0, r.props?.sec || 0);
+    const durs = Object.values(endSec).filter(s => s > 0);
+    const sight = {}, open = {}, dwell = {};
+    for (const r of by('sight')) (sight[r.props?.id] ??= new Set()).add(r.session_id);
+    for (const r of by('card_open')) open[r.props?.id] = (open[r.props?.id] || 0) + 1;
+    for (const r of by('card_close')) (dwell[r.props?.id] ??= []).push(r.props?.sec || 0);
+    const count = (list, key) => { const m = {}; for (const r of list) { const k = key(r) || '（未知）'; m[k] = (m[k] || 0) + 1; } return Object.entries(m).sort((a, b) => b[1] - a[1]); };
+    const daily = {}; for (const r of visits) { const d = r.received_at.slice(0, 10); daily[d] = (daily[d] || 0) + 1; }
+    const loadMs = {}; for (const r of ok) (loadMs[r.device] ??= []).push(r.props?.ms || 0);
+    const fps = {}; for (const r of by('perf')) (fps[r.device] ??= []).push(r.props?.fps || 0);
+    const consentAns = count(by('consent'), r => r.props?.yes ? '同意' : '不同意');
+    return { visits, sessions, vids, otherVisits, estUnique, returners, ok, fail, starts, reach, durs, sight, open, dwell, count, daily, loadMs, fps, consentAns,
+      devices: count(visits, r => ({ phone: '手机', tablet: '平板', desktop: '电脑' }[r.device] || r.device)), os: count(visits, r => r.os), browsers: count(visits, r => r.browser),
+      langs: count(visits, r => r.lang === 'en' ? 'English' : '中文'), channels: count(visits, r => r.channel) };
+  }
+  const table = (head, body) => `<table><tr>${head.map((h, i) => `<th${i ? ' class="n"' : ''}>${h}</th>`).join('')}</tr>${body.map(r => `<tr>${r.map((c, i) => `<td${i ? ' class="n"' : ''}>${c}</td>`).join('')}</tr>`).join('')}</table>`;
+  const barRows = (list, total) => { const max = Math.max(1, ...list.map(x => x[1])); return table(['', '次数', ''], list.slice(0, 12).map(([k, v]) => [esc(k), v, `<div class="hbar" style="width:${Math.round(v / max * 140)}px"></div>`])); };
+  function render() {
+    const c = compute(); summary = [];
+    const kp = (v, l, s = '') => { summary.push([l, v, s]); return `<div class="kpi"><div class="v">${v}</div><div class="l">${l}</div>${s ? `<div class="s">${s}</div>` : ''}</div>`; };
+    const st = c.starts.size;
+    $('kpis').innerHTML = [
+      kp(c.visits.length, '访问次数'),
+      kp(c.estUnique, '独立访客（估算）', `同意统计的 ${c.vids.size} 人 + 未同意的 ${c.otherVisits} 次访问`),
+      kp(c.returners, '回访的访客', `占同意统计访客的 ${pct(c.returners, c.vids.size)}`),
+      kp(pct(c.ok.length, c.ok.length + c.fail.length), '首次加载成功率', `成功 ${c.ok.length} · 失败 ${c.fail.length}`),
+      kp(st, '开始旅程', `占访问的 ${pct(st, c.visits.length)}`),
+      kp(pct(c.reach(11), st), '走完 11 站', `${c.reach(11)} 次`),
+      kp(fmtSec(median(c.durs)), '游玩时长（中位数）', `平均 ${fmtSec(c.durs.length ? c.durs.reduce((a, b) => a + b, 0) / c.durs.length : null)}`),
+    ].join('');
+    // daily visits: simple bars
+    const days = Object.keys(c.daily).sort(), max = Math.max(1, ...Object.values(c.daily)), SL = Math.max(26, Math.min(70, Math.floor(1000 / Math.max(1, days.length)))), W = Math.max(300, days.length * SL), H = 150, T = 16;
+    $('daily').innerHTML = days.length ? `<svg viewBox="0 0 ${W} ${H + T + 24}" width="100%" height="${H + T + 24}" role="img" aria-label="每天的访问">${days.map((d, i) => { const h = Math.round(c.daily[d] / max * H), x = i * SL, bw = SL * 0.62; return `<rect x="${x + (SL - bw) / 2}" y="${T + H - h}" width="${bw}" height="${h}" fill="#1f5a86" rx="2"><title>${d}：${c.daily[d]}</title></rect><text x="${x + SL / 2}" y="${T + H - h - 3}" text-anchor="middle">${c.daily[d]}</text>${SL >= 40 || i % Math.ceil(40 / SL) === 0 ? `<text x="${x + SL / 2}" y="${T + H + 16}" text-anchor="middle">${d.slice(5)}</text>` : ''}`; }).join('')}</svg>` : '<p class="note">这段时间还没有访问。</p>';
+    $('funnel').innerHTML = table(['', '人次', '占开始的'], [['开始旅程', st, '100%'], ['探索 3 站', c.reach(3), pct(c.reach(3), st)], ['探索 6 站', c.reach(6), pct(c.reach(6), st)], ['走完 11 站', c.reach(11), pct(c.reach(11), st)]]);
+    summary.push(['探索3站', c.reach(3), pct(c.reach(3), st)], ['探索6站', c.reach(6), pct(c.reach(6), st)], ['走完11站', c.reach(11), pct(c.reach(11), st)]);
+    const buckets = [[0, 60, '不到 1 分钟'], [60, 300, '1–5 分钟'], [300, 600, '5–10 分钟'], [600, 1200, '10–20 分钟'], [1200, 1e9, '20 分钟以上']];
+    $('durations').innerHTML = barRows(buckets.map(([a, b, l]) => [l, c.durs.filter(s => s >= a && s < b).length])) + `<p class="note">按每次访问的有效时长（页面在前台的时间）统计，共 ${c.durs.length} 次。</p>`;
+    const ids = [...new Set([...ORDER, ...Object.keys(c.sight), ...Object.keys(c.open)])].filter(Boolean);
+    $('sights').innerHTML = table(['地标', '到访', '打开卡片', '阅读时长（中位）', '跳过（&lt;3 秒）'], ids.map(id => {
+      const d = c.dwell[id] || [], m = median(d);
+      summary.push([`地标:${NAMES[id] || id}`, `到访 ${(c.sight[id]?.size) || 0}`, `打开 ${c.open[id] || 0} · 阅读中位 ${m == null ? '—' : Math.round(m) + '秒'}`]);
+      return [esc(NAMES[id] || id), (c.sight[id]?.size) || 0, c.open[id] || 0, fmtSec(m), d.length ? pct(d.filter(s => s < 3).length, d.length) : '—'];
+    }));
+    const devs = Object.keys({ ...c.loadMs, ...c.fps });
+    $('devices').innerHTML = barRows(c.devices) + table(['设备', '加载用时（中位）', '帧率（中位）'], devs.map(d => [({ phone: '手机', tablet: '平板', desktop: '电脑' }[d] || d), c.loadMs[d] ? (median(c.loadMs[d]) / 1000).toFixed(1) + ' 秒' : '—', c.fps[d] ? Math.round(median(c.fps[d])) + ' fps' : '—']))
+      + `<p class="note">系统：${c.os.map(([k, v]) => `${esc(k)} ${v}`).join(' · ') || '—'}</p>`;
+    $('sources').innerHTML = barRows(c.channels) + `<p class="note">语言：${c.langs.map(([k, v]) => `${k} ${v}`).join(' · ') || '—'}<br>浏览器：${c.browsers.map(([k, v]) => `${esc(k)} ${v}`).join(' · ') || '—'}<br>匿名统计的回答：${c.consentAns.map(([k, v]) => `${k} ${v}`).join(' · ') || '—'}</p>`;
+  }
+
+  // ---------------------------------------------------------------- CSV (Excel opens it with Chinese intact: UTF-8 with BOM)
+  const csv = (name, head, data) => {
+    const q = v => { const s = typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v ?? ''); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    const text = '﻿' + [head, ...data].map(r => r.map(q).join(',')).join('\r\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  };
+  const stamp = () => new Date().toISOString().slice(0, 10);
+  $('csvSummary').onclick = () => csv(`圣经之旅-统计汇总-${stamp()}.csv`, ['项目', '数值', '说明'], summary);
+  $('csvRaw').onclick = () => csv(`圣经之旅-原始记录-${stamp()}.csv`, ['时间', '访问编号', '访客编号', '测试', '事件', '版本', '设备', '系统', '浏览器', '语言', '来源', '详情'],
+    rows.map(r => [r.received_at, r.session_id, r.visitor_id || '', r.test ? '是' : '', r.ev, r.ver, r.device, r.os, r.browser, r.lang, r.channel, r.props]));
+  $('reload').onclick = () => load().catch(fail);
+  $('range').onchange = $('withTest').onchange = () => load().catch(fail);
+
+  function fail(e) {
+    if (String(e.message).startsWith('auth:')) { sessionStorage.removeItem('bw_tok'); token = ''; showLogin(); $('loginMsg').innerHTML = '<span class="err">登录已过期，请重新登录。</span>'; return; }
+    $('status').innerHTML = `<span class="err">读取失败：${esc(String(e.message).slice(0, 200))}</span>`;
+  }
+  async function boot() {
+    if (!token) { showLogin(); return; }
+    try {
+      const ok = await rpc('bw_is_admin');
+      if (!ok) { showLogin(); $('loginMsg').innerHTML = '<span class="err">这个邮箱没有查看统计的权限。请确认它已写进统计设置（bw_admins）。</span>'; return; }
+      try { const p = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); $('who').textContent = p.email || ''; } catch { /* ignore */ }
+      $('loginBox').classList.add('hidden'); $('app').classList.remove('hidden'); $('logout').classList.remove('hidden');
+      await load();
+    } catch (e) { fail(e); }
+  }
+  boot();
+})();
+</script>
+</body>
+</html>
